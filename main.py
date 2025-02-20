@@ -1,4 +1,6 @@
 import sys
+import os
+import json
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
     QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QMessageBox,
@@ -271,6 +273,47 @@ class MainWindow(QMainWindow):
         self.table.setRowCount(0)
         self.updateTotal()
 
+def load_data(file_name='data.json'):
+    file_path = os.path.join(os.path.dirname(__file__), file_name)
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            print(f'Data loaded successfully from {file_path}')
+            return data
+        except json.JSONDecodeError:
+            print("Error: JSON data corrupted")
+            return {}
+    else:
+        print(f'No data file found at {file_path}, starting fresh.')
+        return {}
+
+def save_data(data, file_name='data.json'):
+    file_path = os.path.join(os.path.dirname(__file__), file_name)
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f'Data saved successfully to {file_path}')
+    except Exception as e:
+        print(f"Error saving data to {file_path}: {e}")
+
+def main():
+    data = load_data()
+    # ...既存の処理...
+    # 初回実行時など、保存データがない場合はダミーデータを登録
+    data.setdefault('expenses', [])
+    data.setdefault('income', [])
+    data.setdefault('graphs', {'sample': [100, 200, 300]})
+    print("Current data:")
+    print(data)
+    # 例: 新しい家計簿データを追加
+    if not data['expenses']:
+        expense = {'date': '2023-10-01', 'amount': 1000, 'category': 'Food'}
+        data['expenses'].append(expense)
+        print("Added new expense.")
+    # ...既存の処理...
+    save_data(data)
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
@@ -317,3 +360,4 @@ if __name__ == "__main__":
     """)
     window.show()
     sys.exit(app.exec())
+    main()
